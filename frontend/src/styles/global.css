@@ -35,3 +35,36 @@ body { margin: 0; background: #f6f8fb; color: #1f2937; }
 .error-text { color: #b42318; }
 .status-legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 0 0 10px; font-size: 12px; color: var(--muted); }
 .legend-item { background: #eef2f7; border-radius: 999px; padding: 2px 10px; }
+
+/* 飞灰固化整组处置 */
+.pick-col { width: 38px; text-align: center; }
+.pick-disabled { color: #cbd5e1; }
+.status-tag { border-radius: 4px; padding: 1px 8px; font-size: 12px; background: #eef2f7; color: #475569; white-space: nowrap; }
+.status-tag[data-status="已检测"] { background: #dcfce7; color: #166534; }
+.status-tag[data-status="需返工"], .status-tag[data-status="未达标"] { background: #fee2e2; color: #b42318; }
+.status-tag[data-status="待复核"] { background: #fef3c7; color: #92400e; }
+.tag-pending { margin-left: 6px; background: #dbeafe; color: #1e40af; border-radius: 999px; padding: 1px 8px; font-size: 11px; }
+.row-picked { background: #f0f7ff; }
+.row-review { background: #fffdf5; }
+.tone-pending { color: #1e40af; }
+.tone-rework { color: #b42318; }
+.tone-done { color: #166534; }
+.batch-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; background: #eef5ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; }
+.batch-info { font-size: 13px; color: #1e3a8a; }
+.batch-tools { display: flex; align-items: flex-end; gap: 8px; flex-wrap: wrap; }
+.team-item span { display: block; font-size: 12px; color: var(--muted); }
+.team-item input { border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px; font-size: 13px; width: 110px; }
+.rival-banner { background: #fff7ed; border: 1px solid #fdba74; color: #9a3412; border-radius: 8px; padding: 8px 12px; font-size: 13px; margin-bottom: 10px; }
+.report-panel { margin-top: 14px; border: 1px solid var(--border); border-radius: 8px; background: #fff; padding: 12px 14px; }
+.report-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.report-summary { margin: 4px 0 10px; font-size: 13px; color: #1f2937; }
+.report-conflict { margin: 4px 0; font-size: 13px; color: #b42318; font-weight: 600; }
+.report-section { border-left: 3px solid var(--border); padding: 4px 10px; margin-bottom: 8px; }
+.report-section h4 { margin: 0 0 4px; font-size: 13px; }
+.report-section ul { margin: 0; padding-left: 18px; }
+.report-section li { font-size: 12.5px; line-height: 1.7; }
+.report-section.ok { border-color: #22c55e; }
+.report-section.rework { border-color: #ef4444; }
+.report-section.blocked { border-color: #f59e0b; }
+.report-section.duplicate { border-color: #94a3b8; }
+.report-review { margin: 6px 0 0; font-size: 12.5px; color: #92400e; }

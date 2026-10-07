@@ -68,4 +68,31 @@ npm run build
 - 字段、状态、动作与流转目标集中在 `frontend/src/data/modules.ts`；示例数据在
   `frontend/src/data/seed.ts`。
 - 状态流转只允许在 `local-service.ts` 里改，页面组件不做业务判断。
-- 想回到初始数据：清掉浏览器里 `waste-to-energy-plant:entries` 这一项，或调用 `resetModule(模块)`。
+- 想回到初始数据：清掉浏览器里 `waste-to-energy-plant:entries` 这一项（还有
+  `waste-to-energy-plant:meta` 版本号），或调用 `resetModule(模块)`。
+
+## 飞灰固化整组检测
+
+飞灰固化一批几十个，逐条点返工太慢，因此在飞灰固化处置页提供整组处置：
+
+- 勾选多条「固化中（待检测）」批次，逐条给检测结论（合格 / 不合格），一次「整组确认检测」落表。
+- 落表后**逐条回报**：哪几条判成「已检测」、哪几条判成「需返工」、哪几条因为螯合剂用量或
+  水泥用量没填全被挡回「待固化」、哪几条是重报只算一次，回报面板一类一条列清楚。
+- 被挡的批次不会消失：显式写回「待固化」队列，补齐用量后再报；还没进料（本来就在待固化）的
+  不受理整组检测。
+- 已经收下（已检测）的批次不许整组撤回，重报同一只算第一次；返工后复检可以再次收下。
+- 固化块批次进入「已检测/需返工」后，运营概览的「飞灰待返工批次」等指标按库内状态实时重算；
+  每条检测结论同步生成一条环保监控「待复核」记录（按来源固化编号去重）。
+- 两个班组（两个浏览器标签页）抢同一批时，按模块版本号做乐观锁：先入库的那一版说了算，
+  后提交的整组拒收、不写入任何结论，页面提示后按最新数据重报。
+
+业务逻辑都在 `frontend/src/api/local-service.ts` 的 `groupInspectFlyash`；`src/test-harness/`
+下有一个不依赖浏览器的本地验证脚本（需要平台匹配的 esbuild 二进制）：
+
+```bash
+node src/test-harness/driver.mjs reset   # 播种
+node src/test-harness/driver.mjs main    # 整组检测主场景断言
+# 两个进程抢同一批：
+node src/test-harness/driver.mjs race-a 300 & node src/test-harness/driver.mjs race-b 400 & wait
+node src/test-harness/driver.mjs check
+```

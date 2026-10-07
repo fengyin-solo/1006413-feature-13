@@ -3,7 +3,7 @@
     <header class="page-head">
       <div>
         <h2>环保指标监控管理</h2>
-        <p class="page-desc">维护环保监控记录，围绕监控编号、监控指标、限值要求、实测值做登记、筛选与状态流转。</p>
+        <p class="page-desc">飞灰固化检测结论落到本页「待复核」清单，环保科逐条复核通过或不通过。</p>
       </div>
       <div class="page-actions">
         <button class="btn primary" type="button" @click="openCreate">登记环保监控记录</button>
@@ -14,7 +14,7 @@
     <div class="stat-row">
       <article v-for="item in stats" :key="item.label" class="stat-card">
         <span class="stat-label">{{ item.label }}</span>
-        <strong class="stat-value">{{ item.value }}</strong>
+        <strong class="stat-value" :class="item.tone">{{ item.value }}</strong>
       </article>
     </div>
 
@@ -42,12 +42,12 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="row in rows" :key="String(row.id)">
-          <td v-for="column in columns" :key="column">{{ row[column] ?? '—' }}</td>
-          <td>{{ row.status }}</td>
+        <tr v-for="row in rows" :key="String(row.id)" :class="{ 'row-review': String(row.status) === '待复核' }">
+          <td v-for="column in columns" :key="column">{{ row[column] || '—' }}</td>
+          <td><span class="status-tag" :data-status="row.status">{{ row.status }}</span></td>
           <td class="row-actions">
             <button
-              v-for="action in actions"
+              v-for="action in availableActions(row)"
               :key="action"
               class="link"
               type="button"
@@ -71,7 +71,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import {
   downloadEntries,
@@ -83,21 +83,40 @@ import type { EntryRow } from '@/data/types'
 
 const meta = moduleMeta('emission')
 const columns = ["监控编号", "监控指标", "限值要求", "实测值", "达标判定", "监控日期", "监控人员", "监控状态"]
-const actions = ["提交监控", "判定达标", "标记未达标"]
-const statuses = ["待监控", "监控中", "已达标", "未达标"]
-const stats = [{"label": "待监控指标", "value": 0}, {"label": "已达标指标", "value": 0}, {"label": "未达标指标", "value": 0}]
+const statuses = ["待监控", "监控中", "待复核", "已达标", "未达标"]
 
 const rows = ref<EntryRow[]>([])
 const total = ref(0)
 const errorMessage = ref('')
 const filters = ref<Record<string, string>>({})
 const filterFields = columns.slice(0, 3)
+
+const stats = computed(() => {
+  const count = (status: string) => rows.value.filter((row) => String(row.status) === status).length
+  return [
+    { label: '待复核清单', value: count('待复核'), tone: 'tone-pending' },
+    { label: '已达标指标', value: count('已达标'), tone: 'tone-done' },
+    { label: '未达标指标', value: count('未达标'), tone: 'tone-rework' },
+  ]
+})
+
 const statusSummary = computed(() =>
   statuses.map((status: string) => ({
     status,
     count: rows.value.filter((row) => String(row.status) === status).length,
   })),
 )
+
+// 待复核的只能走复核动作；其它状态保留通用动作，避免页面上全是点不动的按钮。
+function availableActions(row: EntryRow): string[] {
+  if (String(row.status) === '待复核') {
+    return ['复核通过', '复核不通过']
+  }
+  if (String(row.status) === '待监控') {
+    return ['提交监控']
+  }
+  return ['提交监控', '复核通过', '复核不通过']
+}
 
 function resetFilters() {
   filters.value = {}
@@ -133,5 +152,17 @@ function reload() {
   }
 }
 
-onMounted(reload)
+function handleStorage(event: StorageEvent) {
+  if (event.key && event.key.includes('waste-to-energy-plant')) {
+    reload()
+  }
+}
+
+onMounted(() => {
+  reload()
+  window.addEventListener('storage', handleStorage)
+})
+onUnmounted(() => {
+  window.removeEventListener('storage', handleStorage)
+})
 </script>
