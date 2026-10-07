@@ -40,6 +40,11 @@ export function listRows(key: string): EntryRow[] {
   return allRows()[key] ?? []
 }
 
+// 丢掉内存缓存重新读 localStorage：整组落表前调一次，保证以最新入库的版本为准。
+export function refreshRows(): void {
+  cache = readStorage()
+}
+
 export function saveRows(key: string, rows: EntryRow[]): void {
   const next = { ...allRows(), [key]: rows }
   cache = next

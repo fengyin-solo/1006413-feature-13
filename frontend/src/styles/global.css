@@ -35,3 +35,19 @@ body { margin: 0; background: #f6f8fb; color: #1f2937; }
 .error-text { color: #b42318; }
 .status-legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 0 0 10px; font-size: 12px; color: var(--muted); }
 .legend-item { background: #eef2f7; border-radius: 999px; padding: 2px 10px; }
+.group-panel, .review-panel { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; margin-bottom: 12px; }
+.group-head h3 { margin: 0 0 4px; font-size: 14px; }
+.group-controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 10px 0; font-size: 13px; }
+.group-label { color: var(--muted); }
+.group-option { display: flex; align-items: center; gap: 4px; }
+.group-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; max-height: 220px; overflow-y: auto; }
+.group-item { display: flex; gap: 14px; align-items: center; font-size: 13px; padding: 4px 6px; border-radius: 6px; }
+.group-item:hover { background: #f1f5f9; }
+.group-code { font-weight: 600; }
+.missing-text { color: #b42318; }
+.settle-summary { margin: 10px 0 6px; font-size: 13px; font-weight: 600; }
+.settle-report { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+.settle-report li { padding: 4px 8px; border-radius: 6px; }
+.settle-report li[data-outcome='accepted'] { background: #ecfdf3; color: #027a48; }
+.settle-report li[data-outcome='blocked'] { background: #fef3f2; color: #b42318; }
+.settle-report li[data-outcome='skipped'] { background: #f2f4f7; color: var(--muted); }

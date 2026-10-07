@@ -33,6 +33,57 @@
       <button class="btn ghost" type="button" @click="resetFilters">重置条件</button>
     </form>
 
+    <section class="group-panel">
+      <div class="group-head">
+        <h3>整组处置</h3>
+        <p class="page-desc">
+          勾选待固化批次，整组判定检测结论；螯合剂用量、水泥用量没填全的批次会被挡下，仍旧留在待固化。
+        </p>
+      </div>
+      <div class="group-controls">
+        <span class="group-label">检测结论：</span>
+        <label class="group-option">
+          <input v-model="groupDecision" type="radio" value="合格" /> 合格 → 已检测
+        </label>
+        <label class="group-option">
+          <input v-model="groupDecision" type="radio" value="不合格" /> 不合格 → 需返工
+        </label>
+        <button class="btn ghost" type="button" @click="toggleAll">全选/清空</button>
+        <button
+          class="btn primary"
+          type="button"
+          :disabled="!selectedIds.length"
+          @click="submitGroup"
+        >
+          整组落表（已选 {{ selectedIds.length }} 条）
+        </button>
+      </div>
+      <ul class="group-list">
+        <li v-for="batch in pendingBatches" :key="String(batch.id)">
+          <label class="group-item">
+            <input v-model="selectedIds" type="checkbox" :value="Number(batch.id)" />
+            <span class="group-code">{{ batch['固化编号'] }}</span>
+            <span>{{ batch['飞灰来源'] }}</span>
+            <span :class="{ 'missing-text': !String(batch['螯合剂用量'] ?? '').trim() }">
+              螯合剂 {{ String(batch['螯合剂用量'] ?? '').trim() || '未填' }}
+            </span>
+            <span :class="{ 'missing-text': !String(batch['水泥用量'] ?? '').trim() }">
+              水泥 {{ String(batch['水泥用量'] ?? '').trim() || '未填' }}
+            </span>
+          </label>
+        </li>
+        <li v-if="!pendingBatches.length" class="empty-state">当前没有待固化的批次</li>
+      </ul>
+      <template v-if="report.length">
+        <p class="settle-summary">{{ reportSummary }}</p>
+        <ul class="settle-report">
+          <li v-for="item in report" :key="item.id" :data-outcome="item.outcome">
+            {{ item.message }}
+          </li>
+        </ul>
+      </template>
+    </section>
+
     <table class="data-table">
       <thead>
         <tr>
@@ -78,7 +129,9 @@ import {
   listEntries,
   moduleMeta,
   runAction as applyAction,
+  settleFlyashGroup,
 } from '@/api/local-service'
+import type { FlyashSettleItem } from '@/api/local-service'
 import type { EntryRow } from '@/data/types'
 
 const meta = moduleMeta('flyash')
@@ -98,6 +151,28 @@ const statusSummary = computed(() =>
     count: rows.value.filter((row) => String(row.status) === status).length,
   })),
 )
+
+// 整组处置：待固化批次多选 + 检测结论 + 逐条回报
+const groupDecision = ref<'合格' | '不合格'>('合格')
+const selectedIds = ref<number[]>([])
+const pendingBatches = ref<EntryRow[]>([])
+const report = ref<FlyashSettleItem[]>([])
+const reportSummary = ref('')
+
+function toggleAll() {
+  selectedIds.value =
+    selectedIds.value.length === pendingBatches.value.length
+      ? []
+      : pendingBatches.value.map((batch) => Number(batch.id))
+}
+
+function submitGroup() {
+  const result = settleFlyashGroup(selectedIds.value, groupDecision.value)
+  reload()
+  report.value = result.items
+  reportSummary.value = result.message
+  errorMessage.value = result.ok ? '' : result.message
+}
 
 function resetFilters() {
   filters.value = {}
@@ -128,6 +203,11 @@ function reload() {
     const payload = listEntries(meta.key, filters.value)
     rows.value = payload.items
     total.value = payload.total
+    // 待固化候选不受筛选条件影响，始终按全量算；已不在待固化的选中项顺手清掉。
+    pendingBatches.value = listEntries(meta.key).items.filter((row) => row.status === '待固化')
+    selectedIds.value = selectedIds.value.filter((id) =>
+      pendingBatches.value.some((batch) => Number(batch.id) === id),
+    )
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '飞灰固化处置列表读取失败'
   }

@@ -33,6 +33,36 @@
       <button class="btn ghost" type="button" @click="resetFilters">重置条件</button>
     </form>
 
+    <section class="review-panel">
+      <div class="group-head">
+        <h3>待复核清单</h3>
+        <p class="page-desc">飞灰固化整组处置落表的检测结论在这里等待复核，复核流转在下方主表操作。</p>
+      </div>
+      <table v-if="reviewList.length" class="data-table">
+        <thead>
+          <tr>
+            <th>监控编号</th>
+            <th>固化编号</th>
+            <th>固化块批次</th>
+            <th>检测结论</th>
+            <th>达标判定</th>
+            <th>监控日期</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="item in reviewList" :key="String(item.id)">
+            <td>{{ item['监控编号'] }}</td>
+            <td>{{ item['固化编号'] }}</td>
+            <td>{{ item['固化块批次'] || '—' }}</td>
+            <td>{{ item['实测值'] }}</td>
+            <td>{{ item['达标判定'] }}</td>
+            <td>{{ item['监控日期'] }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <p v-else class="empty-state">没有待复核的飞灰检测结论</p>
+    </section>
+
     <table class="data-table">
       <thead>
         <tr>
@@ -92,6 +122,8 @@ const total = ref(0)
 const errorMessage = ref('')
 const filters = ref<Record<string, string>>({})
 const filterFields = columns.slice(0, 3)
+// 待复核清单：飞灰固化整组处置落过来、还没进入复核流转的记录，不受筛选条件影响。
+const reviewList = ref<EntryRow[]>([])
 const statusSummary = computed(() =>
   statuses.map((status: string) => ({
     status,
@@ -128,6 +160,9 @@ function reload() {
     const payload = listEntries(meta.key, filters.value)
     rows.value = payload.items
     total.value = payload.total
+    reviewList.value = listEntries(meta.key).items.filter(
+      (row) => row['来源模块'] === 'flyash' && row.status === '待监控',
+    )
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '环保指标监控列表读取失败'
   }
